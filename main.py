@@ -11,7 +11,8 @@ LOGGER.addHandler(logging.StreamHandler())
 LOGGER.setLevel(logging.DEBUG)
 TIP_SERVICE = TIP_APP = falcon.API()
 TIP_ROUTE = '/tips'
-db = DatabaseConnector(os.environ['DB_NAME'])
+ROOT = '/'
+DB = DatabaseConnector(os.environ['DB_NAME'])
 
 
 class APIException(Exception):
@@ -35,22 +36,25 @@ class Tip():
 
         try:
             tips = json.load(req.bounded_stream)
-            results = db.upsert_documents('tips', 'sfdc_id', tips['tips'])
+            results = DB.upsert_documents('tips', 'sfdc_id', tips['tips'])
             db_results = loads(results)
             if db_results.get('nModified') == 0 and db_results.get('nMatched') > 0 and \
                     db_results.get('nUpserted') == 0:
+                LOGGER.info('Records were matched but none were modified')
                 resp.status = falcon.HTTP_200
                 resp.body = json.dumps(results, sort_keys=True, indent=2)
             elif db_results.get('nModified') > 0 or db_results.get('nUpserted') > 0:
+                LOGGER.info('Records were modified or upserted')
                 resp.status = falcon.HTTP_201
                 resp.body = json.dumps(results, sort_keys=True, indent=2)
             else:
+                LOGGER.error('There was a problem processing the request')
                 raise Exception(results)
         except Exception as ex:
             raise falcon.HTTPError(falcon.HTTP_400, 'Error Processing Tip. Error: ', str(ex))
 
 
-TIP_APP.add_route('/', BaseRequest())
+TIP_APP.add_route(ROOT, BaseRequest())
 TIP_APP.add_route(TIP_ROUTE,Tip())
 
 
