@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from bson.json_util import loads
+from bson.json_util import loads, dumps
 
 from sftips.database import DatabaseConnector
 
@@ -41,12 +41,12 @@ class Tip():
             db_results = loads(results)
             if type(db_results) is dict and db_results.get('nModified') == 0 and \
                     db_results.get('nMatched') > 0 and db_results.get('nUpserted') == 0:
-                LOGGER.info('Records were matched but none were modified')
+                LOGGER.info('Records were matched but none were modified. {}'.format(db_results))
                 resp.status = falcon.HTTP_200
                 resp.body = self.generate_json_response(db_results)
             elif type(db_results) is dict and \
                     (db_results.get('nModified') > 0 or db_results.get('nUpserted') > 0):
-                LOGGER.info('Records were modified or upserted')
+                LOGGER.info('Records were modified or upserted. {}'.format(db_results))
                 resp.status = falcon.HTTP_201
                 resp.body = self.generate_json_response(db_results)
             else:
@@ -57,7 +57,7 @@ class Tip():
 
     @staticmethod
     def generate_json_response(data):
-        return json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
+        return dumps(data)
 
 
 TIP_APP.add_route(ROOT, BaseRequest())
