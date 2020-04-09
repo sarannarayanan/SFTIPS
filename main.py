@@ -43,17 +43,21 @@ class Tip():
                     db_results.get('nMatched') > 0 and db_results.get('nUpserted') == 0:
                 LOGGER.info('Records were matched but none were modified')
                 resp.status = falcon.HTTP_200
-                resp.body = json.dumps(results, sort_keys=True, indent=2)
+                resp.body = self.generate_json_response(db_results)
             elif type(db_results) is dict and \
                     (db_results.get('nModified') > 0 or db_results.get('nUpserted') > 0):
                 LOGGER.info('Records were modified or upserted')
                 resp.status = falcon.HTTP_201
-                resp.body = json.dumps(results, sort_keys=True, indent=2)
+                resp.body = self.generate_json_response(db_results)
             else:
                 LOGGER.error('There was a problem processing the request')
-                raise Exception(results)
+                raise Exception(db_results)
         except Exception as ex:
             raise falcon.HTTPError(falcon.HTTP_400, 'Error Processing Tip. Error: ', str(ex))
+
+    @staticmethod
+    def generate_json_response(data):
+        return json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
 
 
 TIP_APP.add_route(ROOT, BaseRequest())
