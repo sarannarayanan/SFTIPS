@@ -36,14 +36,16 @@ class Tip():
 
         try:
             tips = json.load(req.bounded_stream)
+            LOGGER.info('Received Tip creationg request. Proceeding to upsert')
             results = DB.upsert_documents('tips', 'sfdc_id', tips['tips'])
             db_results = loads(results)
-            if db_results.get('nModified') == 0 and db_results.get('nMatched') > 0 and \
-                    db_results.get('nUpserted') == 0:
+            if type(db_results) is dict and db_results.get('nModified') == 0 and \
+                    db_results.get('nMatched') > 0 and db_results.get('nUpserted') == 0:
                 LOGGER.info('Records were matched but none were modified')
                 resp.status = falcon.HTTP_200
                 resp.body = json.dumps(results, sort_keys=True, indent=2)
-            elif db_results.get('nModified') > 0 or db_results.get('nUpserted') > 0:
+            elif type(db_results) is dict and \
+                    (db_results.get('nModified') > 0 or db_results.get('nUpserted') > 0):
                 LOGGER.info('Records were modified or upserted')
                 resp.status = falcon.HTTP_201
                 resp.body = json.dumps(results, sort_keys=True, indent=2)
