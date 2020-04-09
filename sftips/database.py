@@ -7,7 +7,7 @@ class DatabaseConnector:
     """ Handle requests to Mongo DB"""
 
     def __init__(self, db_name):
-        self.db_client = MongoClient(os.environ['MONGO_URI'])
+        self.db_client = MongoClient(os.environ['MONGO_URI'], retryWrites=False)
         self.db_name = db_name
 
     def get_db(self):

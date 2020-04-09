@@ -36,7 +36,7 @@ class Tip():
 
         try:
             tips = json.load(req.bounded_stream)
-            LOGGER.info('Received Tip creationg request. Proceeding to upsert')
+            LOGGER.info('Received tip creation request. Proceeding to upsert')
             results = DB.upsert_documents('tips', 'sfdc_id', tips['tips'])
             db_results = loads(results)
             if type(db_results) is dict and db_results.get('nModified') == 0 and \
@@ -57,7 +57,7 @@ class Tip():
 
 
 TIP_APP.add_route(ROOT, BaseRequest())
-TIP_APP.add_route(TIP_ROUTE,Tip())
+TIP_APP.add_route(TIP_ROUTE, Tip())
 
 
 
