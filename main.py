@@ -13,6 +13,7 @@ LOGGER.setLevel(logging.DEBUG)
 TIP_SERVICE = TIP_APP = falcon.API()
 TIP_ROUTE = '/tips'
 TIP_REQUEST_ROUTE = '/tip-request'
+GOOGLE_TIP_REQUEST_ROUTE = '/google-tip-request'
 ROOT = '/'
 DB = DatabaseConnector(os.environ['DB_NAME'])
 
@@ -145,4 +146,4 @@ class GoogleTipRequest(TipRequest):
 
 TIP_APP.add_route(ROOT, RootRequest())
 TIP_APP.add_route(TIP_ROUTE, Tip())
-TIP_APP.add_route(TIP_REQUEST_ROUTE, GoogleTipRequest())
+TIP_APP.add_route(GOOGLE_TIP_REQUEST_ROUTE, GoogleTipRequest())
