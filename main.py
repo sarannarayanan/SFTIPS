@@ -98,7 +98,7 @@ class TipRequest(BaseRequest):
             self.tip = results[0]
 
     def build_message(self):
-        LOGGER.INFO('Building message')
+        LOGGER.info('Building message')
         self.message = self.get_random_message('welcome')  # 'Hi!'
         self.message += '\n'
         self.tip['title'] + '\n\n'  # 'Considering enabling SSO in your org."
@@ -117,7 +117,7 @@ class TipRequest(BaseRequest):
         pass
 
     def answer(self, resp):
-        LOGGER.INFO('Setting HTTP Response')
+        LOGGER.info('Setting HTTP Response')
         resp.status = falcon.HTTP_200
         resp.body = self.get_platform_response()
         resp.content_type = falcon.MEDIA_JSON
