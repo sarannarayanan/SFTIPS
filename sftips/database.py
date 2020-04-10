@@ -13,7 +13,7 @@ class DatabaseConnector:
     def get_db(self):
         return self.db_client[self.db_name]
 
-    def get_tip_collection(self, collection):
+    def get_collection(self, collection):
         return self.get_db()[collection]
 
     @staticmethod
@@ -28,8 +28,16 @@ class DatabaseConnector:
                    for doc_id, doc in zip(self.get_document_id_list(id_attribute, document_list),
                                           document_list)]
         try:
-            result = self.get_tip_collection(collection).bulk_write(upserts)
+            result = self.get_collection(collection).bulk_write(upserts)
             return dumps(result.bulk_api_result)
         except errors.PyMongoError as error:
             return dumps(str(error))
 
+    def get_random_documents(self, collection, size=1):
+        results = self.get_collection(collection).aggregate([{"$sample": {"size":size} } ])
+        documents = []
+        for count, document in enumerate(results):
+            documents.append(document)
+            if count == size:
+                break
+        return documents

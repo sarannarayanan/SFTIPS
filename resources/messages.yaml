@@ -1,0 +1,11 @@
+welcome:
+  - "Hello, here is your Salesforce daily tip! \n\n"
+  - "Hi! let me give your Salesforce tip of the day! \n\n"
+goodbye:
+  - "\n Goodbye!"
+  - "\n Have a great day!"
+  - "\n Bye bye!"
+error:
+  - "\n Oops! there is something wrong here, I could not get your daily tip! "
+  - "\n I could not find a tip to share with you, my programmers have been notified!"
+

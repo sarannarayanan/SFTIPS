@@ -1,16 +1,18 @@
-import json
-import logging
-import os
+import json, logging, os, random, pathlib, yaml
+from abc import ABC, abstractmethod
+
+import falcon
 from bson.json_util import loads, dumps
+from pydialogflow_fulfillment import DialogflowResponse, DialogflowRequest, SimpleResponse
 
 from sftips.database import DatabaseConnector
 
-import falcon
 LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(logging.StreamHandler())
 LOGGER.setLevel(logging.DEBUG)
 TIP_SERVICE = TIP_APP = falcon.API()
 TIP_ROUTE = '/tips'
+TIP_REQUEST_ROUTE = '/tip-request'
 ROOT = '/'
 DB = DatabaseConnector(os.environ['DB_NAME'])
 
@@ -19,7 +21,7 @@ class APIException(Exception):
     """ Generic Exception for this API"""
 
 
-class BaseRequest():
+class BaseRequest(ABC):
     """Represents a request to ROOT API endpoint"""
 
     def on_get(self, req, resp):
@@ -27,8 +29,32 @@ class BaseRequest():
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
 
+    @staticmethod
+    def generate_json_response(data):
+        return dumps(data)
 
-class Tip():
+    @abstractmethod
+    def on_post(self, req, resp):
+        pass
+
+    @staticmethod
+    def get_random_message(message_type):
+        msg_file = pathlib.Path(__file__).parent.parent / 'resources/messages.yaml'
+        with open(msg_file) as file:
+            messages = yaml.load(file, Loader=yaml.FullLoader)
+            return random.choice(messages[message_type])
+
+
+class RootRequest(BaseRequest):
+
+    def on_get(self, req, resp):
+        super().on_get(req, resp)
+
+    def on_post(self):
+        pass
+
+
+class Tip(BaseRequest):
     """ Serves requests to TIP API endpoint"""
 
     def on_post(self, req, resp):
@@ -55,13 +81,68 @@ class Tip():
         except Exception as ex:
             raise falcon.HTTPError(falcon.HTTP_400, 'Error Processing Tip. Error: ', str(ex))
 
+
+class TipRequest(BaseRequest):
+
+    def __init__(self):
+        self.tip = dict()
+        self.message = str()
+        self.response = None
+
+    def get_tip(self):
+        LOGGER.info('Received request to retrieve tip. Querying DB.')
+        results = DB.get_random_documents('tips', size=1)  # just get one
+        if results:
+            LOGGER.info('Document retrieved successfully')
+            self.tip = results[0]
+
+    def build_message(self):
+        self.message = self.get_random_message('welcome')  # 'Hi!'
+        self.message += '\n'
+        self.tip['title'] + '\n\n'  # 'Considering enabling SSO in your org."
+        if self.tip['anonymous'] is False:  # skip this piece if is meant to be anonymous
+            self.message += self.tip['author'] + ', '  # "Saul Goodman, "
+            self.message += ' ' + self.tip['role']  # " System Admin,
+        self.message += ' \n' + self.tip['content']  # SSO is good for your soul
+        self.message += self.get_random_message('goodbye')  # 'goodbye!'
+
+    def process_request(self):
+        self.get_tip()
+        self.build_message()
+
+    @abstractmethod
+    def get_platform_response(self):
+        pass
+
+    def answer(self, resp):
+        resp.status = falcon.HTTP_200
+        resp.body = self.get_platform_response()
+        resp.content_type = falcon.MEDIA_JSON
+
     @staticmethod
-    def generate_json_response(data):
-        return dumps(data)
+    def get_random_message(message_type):
+        msg_file = pathlib.Path(__file__).parent / 'resources/messages.yaml'
+        with open(msg_file) as file:
+            messages = yaml.load(file, Loader=yaml.FullLoader)
+            return random.choice(messages[message_type])
 
 
-TIP_APP.add_route(ROOT, BaseRequest())
+class GoogleTipRequest(TipRequest):
+
+    def __init__(self):
+        super().__init__()
+
+    def on_post(self, req, resp):
+        self.process_request()
+        self.answer(resp)
+
+    def get_platform_response(self):
+        dialogflow_response = DialogflowResponse()
+        dialogflow_response.expect_user_response = False
+        dialogflow_response.add(SimpleResponse(self.message, self.message))
+        return dialogflow_response.get_final_response()
+
+
+TIP_APP.add_route(ROOT, RootRequest())
 TIP_APP.add_route(TIP_ROUTE, Tip())
-
-
-
+TIP_APP.add_route(TIP_REQUEST_ROUTE, GoogleTipRequest())
