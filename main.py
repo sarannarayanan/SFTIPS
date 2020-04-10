@@ -98,13 +98,14 @@ class TipRequest(BaseRequest):
             self.tip = results[0]
 
     def build_message(self):
+        LOGGER.INFO('Building message')
         self.message = self.get_random_message('welcome')  # 'Hi!'
         self.message += '\n'
         self.tip['title'] + '\n\n'  # 'Considering enabling SSO in your org."
         if self.tip['anonymous'] is False:  # skip this piece if is meant to be anonymous
             self.message += self.tip['author'] + ', '  # "Saul Goodman, "
             self.message += ' ' + self.tip['role']  # " System Admin,
-        self.message += ' \n' + self.tip['content']  # SSO is good for your soul
+        self.message += ' \n' + self.tip['content']  + ' \n\n\n' # SSO is good for your soul
         self.message += self.get_random_message('goodbye')  # 'goodbye!'
 
     def process_request(self):
@@ -116,6 +117,7 @@ class TipRequest(BaseRequest):
         pass
 
     def answer(self, resp):
+        LOGGER.INFO('Setting HTTP Response')
         resp.status = falcon.HTTP_200
         resp.body = self.get_platform_response()
         resp.content_type = falcon.MEDIA_JSON

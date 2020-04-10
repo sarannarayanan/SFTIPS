@@ -1,11 +1,13 @@
 welcome:
   - "Hello, here is your Salesforce daily tip! \n\n"
   - "Hi! let me give your Salesforce tip of the day! \n\n"
+  - "Hi there, Trailblazer!. Here is one good tip \n\n"
+  - "Welcome to the Salesforce daily tips app! I have a tip for you \n\n"
 goodbye:
-  - "\n Goodbye!"
-  - "\n Have a great day!"
-  - "\n Bye bye!"
+  - "\n That was all for today. Goodbye!"
+  - "\n Have a great day, see you next time!"
+  - "\n That's all for today. Bye bye!"
 error:
-  - "\n Oops! there is something wrong here, I could not get your daily tip! "
+  - "\n Oops! there is something wrong here, I could not get your daily tip! Bye for now"
   - "\n I could not find a tip to share with you, my programmers have been notified!"
 
