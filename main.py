@@ -1,9 +1,15 @@
-import json, logging, os, random, pathlib, yaml
+import json
+import logging
+import os
+import pathlib
+import random
+import re
+import yaml
 from abc import ABC, abstractmethod
 
 import falcon
 from bson.json_util import loads, dumps
-from pydialogflow_fulfillment import DialogflowResponse, DialogflowRequest, SimpleResponse
+from pydialogflow_fulfillment import DialogflowResponse, SimpleResponse
 
 from sftips.database import DatabaseConnector
 
@@ -91,22 +97,36 @@ class TipRequest(BaseRequest):
         self.response = None
 
     def get_tip(self):
-        LOGGER.info('Received request to retrieve tip. Querying DB.')
+        LOGGER.info('Received request to retrieve tip.')
         results = DB.get_random_documents('tips', size=1)  # just get one
         if results:
             LOGGER.info('Document retrieved successfully')
             self.tip = results[0]
 
+    def get_ssml_message(self):
+        return self.message
+
+    def get_text_message(self):
+        return re.sub('<[^>]+>', '', self.message)
+
     def build_message(self):
         LOGGER.info('Building message')
-        self.message = self.get_random_message('welcome')  # 'Hi!'
-        self.message += '\n'
-        self.tip['title'] + '\n\n'  # 'Considering enabling SSO in your org."
-        if self.tip['anonymous'] is False:  # skip this piece if is meant to be anonymous
-            self.message += self.tip['author'] + ', '  # "Saul Goodman, "
-            self.message += ' ' + self.tip['role']  # " System Admin,
-        self.message += ' \n' + self.tip['content']  + ' \n\n\n' # SSO is good for your soul
-        self.message += self.get_random_message('goodbye')  # 'goodbye!'
+        self.message = "<speak>"
+        self.message += self.get_random_message('welcome')  # 'Hi!'
+        self.message += self.insert_paragraph(self.tip['title'])  # 'Considering enabling SSO in your org."
+        self.add_speech_pause('2s')
+        self.message += self.insert_paragraph(self.tip['content'])  # SSO is good for your soul
+        self.add_speech_pause('3s')
+        self.message += self.insert_paragraph(self.get_random_message('goodbye'))  # 'goodbye!'
+        self.message += "</speak>"
+
+    def add_speech_pause(self, time):
+        # use SSML syntax to define time, i.e 1s or 500ms
+        self.message += '<break time=\"' + time + '\"/>'
+
+    @staticmethod
+    def insert_paragraph(text):
+        return ' \n\n <p>' + text + '</p> \n\n'
 
     def process_request(self):
         self.get_tip()
@@ -117,7 +137,7 @@ class TipRequest(BaseRequest):
         pass
 
     def answer(self, resp):
-        LOGGER.info('Setting HTTP Response')
+        LOGGER.info('Preparing and sending HTTP Response')
         resp.status = falcon.HTTP_200
         resp.body = self.get_platform_response()
         resp.content_type = falcon.MEDIA_JSON
@@ -142,7 +162,7 @@ class GoogleTipRequest(TipRequest):
     def get_platform_response(self):
         dialogflow_response = DialogflowResponse()
         dialogflow_response.expect_user_response = False
-        dialogflow_response.add(SimpleResponse(self.message, self.message))
+        dialogflow_response.add(SimpleResponse(self.get_text_message(), self.get_ssml_message()))
         return dialogflow_response.get_final_response()
 
 

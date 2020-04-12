@@ -1,13 +1,20 @@
+# Define all possibly common messages that can be answered randomly to a user.
+# These messages are sent using SSML. Therefore, play close attention to punctuation and
+# the ability of adding pauses and/or other speech effects.
+# Alexa: https://developer.amazon.com/en-US/docs/alexa/custom-skills/speech-synthesis-markup-language-ssml-reference.html
+# Google reference: https://developers.google.com/assistant/actions/reference/ssml#json
+# W3C: https://www.w3.org/TR/speech-synthesis11/
+
 welcome:
-  - "Hello, here is your Salesforce daily tip! \n\n"
-  - "Hi! let me give your Salesforce tip of the day! \n\n"
-  - "Hi there, Trailblazer!. Here is one good tip \n\n"
-  - "Welcome to the Salesforce daily tips app! I have a tip for you \n\n"
+  - "<p><s> <emphasis level=\"moderate\"> Hello, here is your Salesforce daily tip! <break time=\"1s\"/> </emphasis> </s></p>"
+  - "<p><s> Hi! let me give you your Salesforce tip of the day! <break time=\"1s\"/> </s></p>"
+  - "<p><s> <emphasis level=\"moderate\"> Hello Trailblazer! </emphasis> <break time=\"500ms\"/> Here is one good Salesforce tip <break time=\"1s\"/> </s></p>"
+  - "<p><s> Welcome to the Salesforce daily tips app! I have a tip ready for you <break time=\"1s\"/> </s></p>"
 goodbye:
-  - "\n That was all for today. Goodbye!"
-  - "\n Have a great day, see you next time!"
-  - "\n That's all for today. Bye bye!"
+  - "<p><s> <break time=\"1s\"/> That was all for today. Goodbye! </s></p>"
+  - "<p><s> <break time=\"1s\"/> Have a great day, see you next time! </s></p>"
+  - "<p><s> <break time=\"1s\"/> That's all for today. Bye bye! </s></p>"
 error:
-  - "\n Oops! there is something wrong here, I could not get your daily tip! Bye for now"
-  - "\n I could not find a tip to share with you, my programmers have been notified!"
+  - " <break time=\"1s\"/> Oops! there is something wrong here, I could not get your daily tip! Bye for now"
+  - " <break time=\"1s\"/> I could not find a tip to share with you, my programmers have been notified!"
 
