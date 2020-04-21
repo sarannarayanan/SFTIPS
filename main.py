@@ -20,6 +20,7 @@ TIP_SERVICE = TIP_APP = falcon.API()
 TIP_ROUTE = '/tips'
 TIP_REQUEST_ROUTE = '/tip-request'
 GOOGLE_TIP_REQUEST_ROUTE = '/google-tip-request'
+AMAZON_TIP_REQUEST_ROUTE = '/amazon-json'
 ROOT = '/'
 DB = DatabaseConnector(os.environ['DB_NAME'])
 
@@ -166,6 +167,24 @@ class GoogleTipRequest(TipRequest):
         return dialogflow_response.get_final_response()
 
 
+class AmazonTipRequest(TipRequest):
+    
+    def __init__(self):
+        super().__init__()
+
+    def on_get(self, req, resp):
+        self.process_request()
+        self.answer(resp)
+    
+    def on_post(self, req, resp):
+        self.process_request()
+        self.answer(resp)
+
+    def get_platform_response(self):
+      
+        return self.get_ssml_message()
+
 TIP_APP.add_route(ROOT, RootRequest())
 TIP_APP.add_route(TIP_ROUTE, Tip())
 TIP_APP.add_route(GOOGLE_TIP_REQUEST_ROUTE, GoogleTipRequest())
+TIP_APP.add_route(AMAZON_TIP_REQUEST_ROUTE, AmazonTipRequest())
