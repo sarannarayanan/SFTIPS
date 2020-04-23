@@ -5,16 +5,16 @@
 # Google reference: https://developers.google.com/assistant/actions/reference/ssml#json
 # W3C: https://www.w3.org/TR/speech-synthesis11/
 
-welcome:
-  - "<p><s> <emphasis level=\"moderate\"> Hello, here is your Salesforce daily tip! <break time=\"1s\"/> </emphasis> </s></p>"
-  - "<p><s> Hi! let me give you your Salesforce tip of the day! <break time=\"1s\"/> </s></p>"
-  - "<p><s> <emphasis level=\"moderate\"> Hello Trailblazer! </emphasis> <break time=\"500ms\"/> Here is one good Salesforce tip <break time=\"1s\"/> </s></p>"
-  - "<p><s> Welcome to the Salesforce daily tips app! I have a tip ready for you <break time=\"1s\"/> </s></p>"
-goodbye:
-  - "<p><s> <break time=\"1s\"/> That was all for today. Goodbye! </s></p>"
-  - "<p><s> <break time=\"1s\"/> Have a great day, see you next time! </s></p>"
-  - "<p><s> <break time=\"1s\"/> That's all for today. Bye bye! </s></p>"
+greetings:
+  - "Hello, here is your Salesforce daily tip!"
+  - "Hi! let me give you your Salesforce tip of the day!"
+  - "Hello Trailblazer! Here is one good Salesforce tip"
+  - "Welcome to the Salesforce daily tips app! I have a tip ready for you"
+farewells:
+  - "That was all for today. Goodbye! "
+  - "Have a great day, see you next time!"
+  - "That's all for today. Bye bye!"
 error:
-  - " <break time=\"1s\"/> Oops! there is something wrong here, I could not get your daily tip! Bye for now"
-  - " <break time=\"1s\"/> I could not find a tip to share with you, my programmers have been notified!"
+  - "Oops! there is something wrong here, I could not get your daily tip! Bye for now"
+  - "I could not find a tip to share with you, my programmers have been notified!"
 

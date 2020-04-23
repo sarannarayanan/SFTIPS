@@ -1,43 +1,52 @@
-import os
-from bson.json_util import dumps
-from pymongo import MongoClient, UpdateOne, errors
+from google.cloud import firestore
+
+import random
+
+
+class DatabaseError(Exception):
+    pass
 
 
 class DatabaseConnector:
-    """ Handle requests to Mongo DB"""
+    """ Handle requests to Firestore DB"""
 
-    def __init__(self, db_name):
-        self.db_client = MongoClient(os.environ['MONGO_URI'], retryWrites=False)
-        self.db_name = db_name
+    _client = None
 
-    def get_db(self):
-        return self.db_client[self.db_name]
+    def __init__(self):
+        self.client = self.get_client()
 
-    def get_collection(self, collection):
-        return self.get_db()[collection]
+    def get_client(self):
+        # for local dev, GOOGLE_APPLICATION_CREDENTIALS env var must be set
+        if self._client:
+            return self._client
+        else:
+            self._client = firestore.Client()
 
-    @staticmethod
-    def get_document_id_list(id_attribute, document_list):
-        """ get a list of 'ids' given a set of records"""
-        return [doc.get(id_attribute) for doc in document_list if doc.get(id_attribute)]
-
-    def upsert_documents(self, collection, id_attribute, document_list):
-        """ find matching records to update, if no matches are found, then insert new ones"""
-
-        upserts = [UpdateOne({id_attribute: doc_id}, {'$set': doc}, upsert=True)
-                   for doc_id, doc in zip(self.get_document_id_list(id_attribute, document_list),
-                                          document_list)]
-        try:
-            result = self.get_collection(collection).bulk_write(upserts)
-            return dumps(result.bulk_api_result)
-        except errors.PyMongoError as error:
-            return dumps(str(error))
-
-    def get_random_documents(self, collection, size=1):
-        results = self.get_collection(collection).aggregate([{"$sample": {"size":size} } ])
-        documents = []
-        for count, document in enumerate(results):
-            documents.append(document)
-            if count == size:
-                break
+    def get_all_documents(self, collection):
+        document_list = self.get_client().collection(collection)
+        documents = [doc.to_dict() for doc in document_list.stream()]
         return documents
+
+    def upsert_batch(self, collection, documents, key_attribute):
+        "collection name, list of dicts, and field to match, returns None"
+        try:
+
+            batch = self.get_client().batch()
+
+            for document in documents:
+                document['timestamp'] = firestore.SERVER_TIMESTAMP
+                doc_ref = self.get_client().collection(collection).document(document[key_attribute])
+                batch.set(doc_ref, document)
+            return batch.commit() is not None
+        except Exception as error:
+            raise DatabaseError(str(error))
+
+    def get_document(self, collection, document_id):
+        doc_ref = self.get_client().collection(collection).document(document_id)
+        doc = doc_ref.get()
+        if doc.exists:
+            return doc.to_dict()
+
+    def get_random_document(self, collection):
+        all_docs = self.get_all_documents(collection)
+        return random.choice(all_docs)
