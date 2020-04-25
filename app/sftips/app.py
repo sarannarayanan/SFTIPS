@@ -5,13 +5,13 @@ import os
 from abc import ABC, abstractmethod
 from collections import namedtuple, OrderedDict
 
-from sftips import messages as msgs
+from app.sftips import messages as msgs
 
 import falcon
-from bson.json_util import loads, dumps
+from bson.json_util import dumps
 from pydialogflow_fulfillment import DialogflowResponse, SimpleResponse
 
-from sftips.database import DatabaseConnector
+from app.sftips.database import DatabaseConnector
 
 FORMATTER = logging.Formatter('%(name)s - %(message)s')
 HANDLER = logging.StreamHandler()
