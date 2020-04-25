@@ -6,7 +6,7 @@ import yaml
 
 
 def get_random_message(message_type):
-    msg_file = pathlib.Path(__file__).parent.parent / 'resources/messages.yaml'
+    msg_file = pathlib.Path(__file__).parent.parent / 'app/resources/messages.yaml'
     with open(msg_file) as file:
         messages = yaml.load(file, Loader=yaml.FullLoader)
         return random.choice(messages[message_type])

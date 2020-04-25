@@ -1,13 +1,11 @@
 import json
 import logging
-import pathlib
-import random
-import re
-import yaml
-from abc import ABC, abstractmethod
-from collections import namedtuple
+import os
 
-from . import messages as msgs
+from abc import ABC, abstractmethod
+from collections import namedtuple, OrderedDict
+
+from sftips import messages as msgs
 
 import falcon
 from bson.json_util import loads, dumps
@@ -22,26 +20,34 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
 LOGGER.addHandler(HANDLER)
 
-TIP_SERVICE = TIP_APP = falcon.API()
+TIP_SERVICE = falcon.API()
 TIP_ROUTE = '/tips'
 TIP_REQUEST_ROUTE = '/tip-request'
 GOOGLE_TIP_REQUEST_ROUTE = '/google-tip-request'
 AMAZON_TIP_REQUEST_ROUTE = '/amazon-tip-request'
 ROOT = '/'
 DB = DatabaseConnector()
-
+APP_VERSION = os.getenv('GAE_VERSION')
+SHA = os.getenv('SHORT_SHA')
 
 class APIException(Exception):
     """ Generic Exception for this API"""
 
+def generic_error_handler(req, resp, ex, params):
+    resp.status = falcon.HTTP_500
+    resp.body = 'I was either too lazy to properly handle this or this was genuinely unexpected: %s' % str(ex)
 
 class BaseRequest(ABC):
     """Represents a request to ROOT API endpoint"""
 
     def on_get(self, req, resp):
-        data = {'status': 'Always look at the bright side of life!'}
+
+        data = OrderedDict()
+        data['status'] = 'Always look at the bright side of life!'
+        data['version']= APP_VERSION
+        data['SHA']=SHA
         resp.status = falcon.HTTP_200
-        resp.body = json.dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
+        resp.body = json.dumps(data, indent=2, separators=(',', ': '))
 
     @staticmethod
     def generate_json_response(data):
@@ -101,10 +107,11 @@ class TipRequest(BaseRequest):
         self.message += msgs.get_goodbye_message() + '\n'  # bye
 
     def answer(self, resp):
-        LOGGER.info('Preparing and sending HTTP Response')
+        LOGGER.info('Preparing HTTP Response')
         resp.status = falcon.HTTP_200
         resp.body = self.get_platform_response()
         resp.content_type = falcon.MEDIA_JSON
+        LOGGER.info('Provided Response')
 
 
 class GoogleTipRequest(TipRequest):
@@ -151,8 +158,8 @@ class AmazonTipRequest(TipRequest):
         pass
 
 
-TIP_APP.add_route(ROOT, RootRequest())
-TIP_APP.add_route(TIP_ROUTE, Tip())
-TIP_APP.add_route(GOOGLE_TIP_REQUEST_ROUTE, GoogleTipRequest())
-TIP_APP.add_route(AMAZON_TIP_REQUEST_ROUTE, AmazonTipRequest())
-
+TIP_SERVICE.add_route(ROOT, RootRequest())
+TIP_SERVICE.add_route(TIP_ROUTE, Tip())
+TIP_SERVICE.add_route(GOOGLE_TIP_REQUEST_ROUTE, GoogleTipRequest())
+TIP_SERVICE.add_route(AMAZON_TIP_REQUEST_ROUTE, AmazonTipRequest())
+TIP_SERVICE.add_error_handler(Exception, generic_error_handler)
