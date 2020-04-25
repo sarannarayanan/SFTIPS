@@ -25,7 +25,7 @@ AMAZON_TIP_REQUEST_ROUTE = '/amazon-tip-request'
 ROOT = '/'
 DB = DatabaseConnector()
 APP_VERSION = os.getenv('GAE_VERSION')
-SHA = os.getenv('SHORT_SHA')
+SHA = os.getenv('CURRENT_VERSION_ID')
 
 
 class APIException(Exception):
@@ -43,8 +43,8 @@ class BaseRequest(ABC):
     def on_get(self, req, resp):
         data = OrderedDict()
         data['status'] = 'Always look at the bright side of life!'
-        data['version'] = APP_VERSION
-        data['SHA'] = SHA
+        data['GAE_VERSION'] = APP_VERSION
+        data['VERSION ID'] = SHA
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(data, indent=2, separators=(',', ': '))
 
