@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 from collections import namedtuple, OrderedDict
 
 import falcon
-from bson.json_util import dumps
 from pydialogflow_fulfillment import DialogflowResponse, SimpleResponse
 from sftips import messages as msgs
 
@@ -49,10 +48,6 @@ class BaseRequest(ABC):
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(data, indent=2, separators=(',', ': '))
 
-    @staticmethod
-    def generate_json_response(data):
-        return dumps(data)
-
     @abstractmethod
     def on_post(self, req, resp):
         pass
@@ -80,10 +75,10 @@ class Tip(BaseRequest):
             if results:
                 LOGGER.info('Records were upserted. {}'.format(results))
                 resp.status = falcon.HTTP_201
-                resp.body = self.generate_json_response(results)
+                resp.body = json.dumps(results)
             else:
                 resp.status = 200
-                resp.body = self.generate_json_response('Nothing to create.')
+                resp.body = json.dumps('Nothing to create.')
         except Exception as ex:
             raise falcon.HTTPError(falcon.HTTP_500, 'Error Processing Tip. Error: ', str(ex))
 
