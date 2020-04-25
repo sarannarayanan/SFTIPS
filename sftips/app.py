@@ -1,17 +1,15 @@
 import json
 import logging
 import os
-
 from abc import ABC, abstractmethod
 from collections import namedtuple, OrderedDict
-
-from app.sftips import messages as msgs
 
 import falcon
 from bson.json_util import dumps
 from pydialogflow_fulfillment import DialogflowResponse, SimpleResponse
+from sftips import messages as msgs
 
-from app.sftips.database import DatabaseConnector
+from sftips.database import DatabaseConnector
 
 FORMATTER = logging.Formatter('%(name)s - %(message)s')
 HANDLER = logging.StreamHandler()
@@ -30,22 +28,24 @@ DB = DatabaseConnector()
 APP_VERSION = os.getenv('GAE_VERSION')
 SHA = os.getenv('SHORT_SHA')
 
+
 class APIException(Exception):
     """ Generic Exception for this API"""
+
 
 def generic_error_handler(req, resp, ex, params):
     resp.status = falcon.HTTP_500
     resp.body = 'I was either too lazy to properly handle this or this was genuinely unexpected: %s' % str(ex)
 
+
 class BaseRequest(ABC):
     """Represents a request to ROOT API endpoint"""
 
     def on_get(self, req, resp):
-
         data = OrderedDict()
         data['status'] = 'Always look at the bright side of life!'
-        data['version']= APP_VERSION
-        data['SHA']=SHA
+        data['version'] = APP_VERSION
+        data['SHA'] = SHA
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(data, indent=2, separators=(',', ': '))
 
