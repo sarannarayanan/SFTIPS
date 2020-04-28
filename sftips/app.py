@@ -3,11 +3,12 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from collections import namedtuple, OrderedDict
-
+from json import JSONEncoder
+import uuid 
 import falcon
 from pydialogflow_fulfillment import DialogflowResponse, SimpleResponse
 from sftips import messages as msgs
-
+import datetime
 from sftips.database import DatabaseConnector
 
 FORMATTER = logging.Formatter('%(name)s - %(message)s')
@@ -84,7 +85,7 @@ class Tip(BaseRequest):
 class TipRequest(BaseRequest):
 
     def __init__(self):
-        self.random_tip = dict()
+        self.random_tip = dict()  
         self.tips = list()
         self.message = str()
         self.response = None
@@ -138,19 +139,37 @@ class AmazonTipRequest(TipRequest):
         super().__init__()
 
     def on_post(self, req, resp):
+        pass
+
+    def on_get(self, req, resp):
         self.request_tips()
         self.create_message()
         self.answer(resp)
 
     def request_tips(self):
-        # your logic to get tips here
-        pass
+        LOGGER.info('Received request to retrieve tip')
+        LOGGER.info('going to db')
+        results = DB.get_random_document('tips')
+        LOGGER.info(results)
+        if results:
+            LOGGER.info('Document retrieved successfully')
+            self.random_tip = namedtuple("Tip", results.keys())(*results.values())
+            LOGGER.info(self.random_tip)
+        
 
     def get_platform_response(self):
         # your amazon platform response logic
-        pass
-
-
+        data1 = OrderedDict()
+        #print(data1)()
+        data1['uid'] = str(uuid.uuid1())
+        data1['updateDate'] = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+        data1['titleText'] =   self.random_tip.title
+        data1['mainText'] =  self.random_tip.content
+        #data1['streamUrl'] =  self.random_tip.url
+        #data1['redirectionUrl'] = self.random_tip.url
+        #print(data1)
+        return json.dumps(data1, sort_keys=True, indent=2, separators=(',', ': '))
+ 
 TIP_SERVICE.add_route(ROOT, RootRequest())
 TIP_SERVICE.add_route(TIP_ROUTE, Tip())
 TIP_SERVICE.add_route(GOOGLE_TIP_REQUEST_ROUTE, GoogleTipRequest())
