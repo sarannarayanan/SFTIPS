@@ -162,7 +162,7 @@ class AmazonTipRequest(TipRequest):
         data1 = OrderedDict()
         #print(data1)()
         data1['uid'] = str(uuid.uuid1())
-        data1['updateDate'] = datetime.datetime.now().isoformat()
+        data1['updateDate'] = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
         data1['titleText'] =   self.random_tip.title
         data1['mainText'] =  self.random_tip.content
         #data1['streamUrl'] =  self.random_tip.url
